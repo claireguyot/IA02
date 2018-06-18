@@ -4,17 +4,21 @@
 %===================================================%
 
 % Exemple de grille de sudoku
+sudoku(0,[[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]]).
 sudoku(1,[[1,2,0,5,6,7,9,7,2],[2,7,5,5,4,7,9,1,2],[3,7,6,5,4,7,5,1,3],[4,8,2,5,4,7,9,1,4],[5,9,2,5,4,7,9,1,5],[6,1,2,0,4,7,9,1,6],[7,6,2,5,4,7,9,1,7],[8,5,2,5,4,0,9,1,8],[9,7,3,5,4,7,9,1,9]]).
 sudoku(2,[[1,0,0,0,0,0,0,0,0],[0,2,0,0,0,0,0,0,0],[0,0,3,0,0,0,0,0,0],[0,0,0,4,0,0,0,0,0],[0,0,0,0,5,0,0,0,0],[0,0,0,0,0,6,0,0,0],[0,0,0,0,0,0,7,0,0],[0,0,0,0,0,0,0,8,0],[0,0,0,0,0,0,0,0,9]]).
 sudoku(3,[[4,1,5,6,3,8,9,7,2],[3,6,2,4,7,9,1,8,5],[7,8,9,2,1,5,3,6,4],[9,2,6,3,4,1,7,5,8],[1,3,8,7,5,6,4,2,9],[5,7,4,9,8,2,6,3,1],[2,5,7,1,6,4,8,9,3],[8,4,3,5,9,7,2,1,6],[6,9,1,8,2,3,5,4,7]]).
 sudoku(4,[[0,1,0,6,3,8,0,7,2],[0,6,2,0,7,9,1,8,0],[0,8,9,2,0,5,3,0,4],[9,0,6,0,4,0,7,5,8],[1,3,8,0,5,6,4,2,0],[5,7,0,9,8,2,0,0,1],[2,5,0,0,6,0,8,9,3],[8,4,3,0,9,7,0,1,6],[6,9,0,8,2,3,0,4,0]]).
+sudoku(5,[[0,1,0,2,0,0,0,0,0],[0,0,0,0,3,0,0,4,5],[0,0,0,0,6,0,7,0,0],[2,0,0,1,0,0,0,0,0],[5,0,0,0,0,0,0,0,6],[0,0,0,0,0,8,0,0,9],[0,0,7,0,2,0,0,0,0],[6,3,0,0,5,0,0,0,0],[0,0,0,0,0,4,0,8,0]]).
+
+
 
 %====================================================%
 %========= AFFICHAGE D'UNE GRILLE DE SUDOKU =========%
 %====================================================%
 
 % Afficher le sudoku 
-afficher_grille(Grille) :- write("  -----   -----   -----  "),afficher_lignes(Grille).
+afficher_grille(Grille) :- write("  -----   -----   -----  "),afficher_lignes(Grille),nl.
 
 % Afficher toutes les lignes
 afficher_lignes([]).
@@ -26,6 +30,8 @@ afficher_ligne([Case1,Case2,Case3,Case4,Case5,Case6,Case7,Case8,Case9]) :- nl,wr
 % Afficher une case
 afficher_case(0) :- put(32),!.
 afficher_case(X) :- write(X),!.
+
+
 
 %===============================================================%
 %========= OBTENIR DES ELEMENTS DE LA GRILLE DE SUDOKU =========%
@@ -66,13 +72,25 @@ retourner_carre(Grille,Indice,Resultat) :- Indice>0,Indice<4,couper_lignes(Grill
 retourner_carre(Grille,Indice,Resultat) :- Indice>0,Indice<7,couper_lignes(Grille,4,1,Liste),couper_colonnes(Liste,Indice,1,Resultat).
 retourner_carre(Grille,Indice,Resultat) :- Indice>0,couper_lignes(Grille,7,1,Liste),couper_colonnes(Liste,Indice,1,Resultat).
 
+
+
 %===================================================%
 %========= VALIDITE DE LA GRILLE DE SUDOKU =========%
 %===================================================%
 
+% Vérifier que X est un chiffre entre 1 et 9
+chiffre(X) :- element_present_no_cut(X, [1,2,3,4,5,6,7,8,9]).
+
+% Vérifier qu'il s'agit d'une liste
+liste_valide([]).
+liste_valide([_|B]):- liste_valide(B).
+
 % Tester si un élément est présent dans une liste (p.117 du poly)
 element_present(Element,[Element|_]) :- !.
 element_present(Element,[_|Liste]) :- element_present(Element,Liste).
+
+element_present_no_cut(Element,[Element|_]).
+element_present_no_cut(Element,[_|Liste]) :- element_present_no_cut(Element,Liste).
 
 % Tester si une ligne est valide
 ligne_valide([]).
@@ -86,6 +104,12 @@ colonne_valide(Colonne) :- ligne_valide(Colonne).
 carre_valide([],4) :- !.
 carre_valide([Carre|Q],Compteur) :- Compteur<4,ligne_valide(Carre),C is Compteur+1,carre_valide(Q,C).
 
+carre_valide(Carre) :- aplatir_liste(Carre, Carref), ligne_valide(Carref).
+% Aplatir une liste
+aplatir_liste([], []).
+aplatir_liste([T|Q], Res) :- aplatir_liste(T, TF), aplatir_liste(Q,QF), concat(TF, QF, Res), !.
+aplatir_liste(T, [T]).
+
 % Tester si une grille de sudoku est valide
 sudoku_valide(Grille) :- grille_valide(Grille,1).
 
@@ -95,41 +119,213 @@ grille_valide(Grille,Compteur) :- Compteur<10,retourner_ligne(Grille,Compteur,Li
                                     retourner_carre(Grille,Compteur,Carre),carre_valide(Carre,1),C is Compteur+1,grille_valide(Grille,C).
 
 
-%=====================================================%
-%==== GRILLES ATTEIGNALBLES EN AJOUTANT 1 CHIFFRE ====%
-%=====================================================%
+% Vérifier que la grille est valide en considerant qu'une seule case a été modifiée (La case [Lig,Col]), permet de ne pas revérifier toute la grille à chaque mouvement
+%ajout_valide(Grille, [Col, Lig, _]) :- retourner_ligne(Grille,Lig,Ligne), ligne_valide(Ligne),retourner_colonne(Grille,Col,Colonne),colonne_valide(Colonne), Idcar is 3*((Lig-1)//3)+((Col-1)//3)+1,retourner_carre(Grille,Idcar,Carre),carre_valide(Carre), !.
 
-%Affiche successivement lemplacement (Colonne ResCol, position ResVal) des 0 de la grille. Echoue si il ny a aucun 0 dans la grille.
-chercheZero(Grille,IndiceCol,10,ResCol,ResVal) :- ICol is IndiceCol +1, !,chercheZero(Grille, ICol, 1, ResCol, ResVal).
-chercheZero(Grille,IndiceCol,IndiceVal,ResCol,ResVal) :- element_i(Grille, IndiceCol, Col), element_i(Col, IndiceVal, 0), ResCol is IndiceCol, ResVal is IndiceVal.
-chercheZero(Grille,IndiceCol,IndiceVal,ResCol,ResVal) :- IndiceCol<10, IVal is IndiceVal +1, chercheZero(Grille, IndiceCol, IVal, ResCol, ResVal).
+ajout_valide(Grille, [IdCol, IdLig, _]) :- retourner_ligne(Grille,IdLig,Ligne), ligne_valide(Ligne),retourner_colonne(Grille,IdCol,Colonne),colonne_valide(Colonne), IdCar is 3*((IdLig-1)//3)+((IdCol-1)//3)+1,retourner_carre(Grille,IdCar,Carre),carre_valide(Carre,1).
+ajout_valide(_, [_, _, _]) :- write('/!\ Ajout incorrect'),nl,nl,fail.
 
+% Vérifier que la coordonnée d'une case est valide
+coordonnee_valide(X) :- X>0, X=<9, chiffre(X), !.
+coordonnee_valide(_) :- nl, write('/!\ Coordonnee incorrecte'),nl,nl, fail.
 
-%Remplace une valeur dune liste par une autre
-remplace([_|Q], 1, Valeur, [Valeur|Q]).
-remplace([T|Q], Id, Valeur, [T|Res]) :- Id2 is Id-1, remplace(Q, Id2, Valeur, Res).
-
-%Remplace une valeur dune grille par une autre
-remplace_Grille(Grille, IdCol, IdLigne, Valeur, Res) :- element_i(Grille, IdCol, Col), remplace(Col, IdLigne, Valeur, NewCol), remplace(Grille, IdCol, NewCol, Res).
-
-ajout_valeur(G, [ICol, Ilig], NewG) :- chiffre(Val),chercheZero(G, 1, 1, ICol, Ilig), remplace_Grille(G, ICol, Ilig, Val, NewG).
-
-chiffre(X) :-element_present_no_cut(X, [1,2,3,4,5,6,7,8,9]).
-element_present_no_cut(Element,[Element|_]).
-element_present_no_cut(Element,[_|Liste]) :- element_present_no_cut(Element,Liste).
-
-%=====================================================%
-%========= RESOLUTION DE LA GRILLE DE SUDOKU =========%
-%=====================================================%
+% Tester si une grille de sudoku est pleine
+grille_pleine([]).
+grille_pleine([Liste|Reste]) :-­ \+ element_present(0,Liste), grille_pleine(Reste).
 
 
 
-solve(GrilleComp, GrilleComp, _, []) :- \+chercheZero(GrilleComp, 1, 1, _, _), afficher_grille(GrilleComp).
-solve(GrillePartielle, GrilleComp, History, [Mvt|Mvts]):- ajout_valeur(GrillePartielle, Mvt, GrilleSucc), sudoku_valide(GrilleSucc), solve(GrilleSucc, GrilleComp, [GrilleSucc|History], Mvts).
+%===================================================%
+%======== MODIFICATION D'UNE CASE DU SUDOKU ========%
+%===================================================%
+
+% Remplacer une valeur d'une liste par une autre
+remplacer([_|Q], 1, Valeur, [Valeur|Q]) :- !.
+remplacer([T|Q], Id, Valeur, [T|Res]) :- Id2 is Id-1, remplacer(Q, Id2, Valeur, Res).
+
+% Remplacer une valeur d'une grille par une autre
+remplacer_valeur(Grille, IdCol, IdLig, Valeur, Res) :- element_i(Grille, IdLig, Lig), remplacer(Lig, IdCol, Valeur, NewLig), remplacer(Grille, IdLig, NewLig, Res).
+
+% Suppression d'une case
+supprimer_valeur(Grille,IdColonne,IdLigne,G) :- remplacer_valeur(Grille,IdColonne,IdLigne,0,G).
+
+% Vérifier que la case est vide
+case_vide(Grille,I,J) :- \+case_pleine(Grille,I,J),!.
+case_vide(_,_,_) :- write('/!\ Cette case est pleine'),nl,fail.
+
+% Vérifier que la case est pleine
+case_pleine(Grille,I,J) :- retourner_ligne(Grille,I,Ligne),element_i(Ligne,J,Valeur),Valeur =\= 0,!.
+case_pleine(_,_,_) :- write('/!\ Cette case est vide'),nl,fail.
+
+
+
+%==================================================%
+%============== ACTION SUR UN SUDOKU ==============%
+%==================================================%
+
+% Vérifier que le sudoku est terminé
+resolution_valide(Grille,_) :- grille_pleine(Grille), write('!!! Sudoku termine !!!'),nl,!.
+resolution_valide(_,Choix) :- Choix = 3.
+
+% Verifier si la proposition de sudoku est terminée (choix 3 ou 4)
+sudoku_entre(Choix) :- Choix = 3,!.
+sudoku_entre(Choix) :- Choix = 4.
+
+
+
+%==================================================%
+%============= RESOLUTION AUTOMATIQUE =============%
+%==================================================%
 
 
 
 
-%=====================================================%
-%======== GENERATION D'UNE GRILLE DE SUDOKU ==========%
-%=====================================================%
+
+%==================================================%
+%================= MENU PRINCIPAL =================%
+%==================================================%
+
+sudoku :- nl,
+		write('%=============================%'),nl,
+		write('%======= JEU DU SUDOKU =======%'),nl,
+		write('%=============================%'),nl,nl,
+			repeat, 
+			menu, !.
+
+menu :- write(' %=========== MENU ===========%'),nl,nl,
+		write('1. Resoudre manuellement un sudoku de l\'ordinateur'),nl,
+		write('2. Entrer un sudoku manuellement'),nl,
+		write('3. Quitter'),nl,nl,
+			read(Choix), nl,
+			cas(Choix),
+			Choix = 3, nl.
+
+cas(1) :- write(' %===== RESOLUTION =====%'),nl,
+			sudoku(4,Grille),
+			asserta(grille(Grille)),
+			repeat,
+			resolution_manuelle, !.
+
+cas(2) :- write(' %==== PROPOSITION ====%'),nl,
+			sudoku(0,Grille),
+			asserta(proposition_sudoku(Grille)),
+			repeat,
+			entrer_sudoku,!.
+
+cas(3) :- write('%====== A bientot ======%'),!.
+cas(_) :- write('/!\ Entrez 1,2 ou 3'),!.
+
+
+%--------------------------------------------------%
+%------------------- RESOLUTION -------------------%
+%--------------------------------------------------%
+
+% Menu résolution
+resolution_manuelle :- nl,write('  %===== COMPLETEZ =====%'),nl,nl,
+	grille(Grille), 
+	afficher_grille(Grille), nl,
+	write('1. Entrer un chiffre'), nl,
+	write('2. Supprimer un chiffre'), nl,
+	write('3. Quitter'), nl, nl,
+	read(Choix), nl,
+	cas_resolution(Choix,Grille),
+	grille(Grille_modifiee),
+	resolution_valide(Grille_modifiee,Choix).
+
+% Entrer un chiffre
+cas_resolution(1,Grille) :- write('Ligne de la valeur a entrer : '),
+	read(IdLigne),
+	coordonnee_valide(IdLigne),nl,
+	write('Colonne de la valeur a entrer : '),
+	read(IdColonne),
+	coordonnee_valide(IdColonne),nl,
+	write('Valeur a entrer : '),
+	read(Valeur),
+	coordonnee_valide(Valeur),nl,
+	case_vide(Grille,IdLigne,IdColonne),
+	remplacer_valeur(Grille,IdColonne,IdLigne,Valeur,G),
+	sudoku_valide(G),
+	retract(grille(Grille)),
+	asserta(grille(G)),
+	write('Valeur ajoutee'),nl,nl,!.
+
+cas_resolution(1,_) :- !.
+
+% Supprimer un chiffre
+cas_resolution(2,Grille) :- write('Ligne de la valeur a supprimer : '),
+	read(IdLigne),
+	coordonnee_valide(IdLigne),nl,
+	write('Colonne de la valeur a supprimer : '),
+	read(IdColonne),
+	coordonnee_valide(IdColonne),nl,
+	case_pleine(Grille,IdLigne,IdColonne),
+	supprimer_valeur(Grille,IdColonne,IdLigne,G),
+	retract(grille(Grille)),
+	asserta(grille(G)),
+	write('Valeur supprimee'),nl,nl,!.
+
+cas_resolution(2,_) :- !.
+
+% Quitter
+cas_resolution(3,_) :- !.
+
+cas_resolution(_,_) :- nl, write('/!\ Entrez 1,2 ou 3'), nl, !, fail.
+
+
+%---------------------------------------------------%
+%------------------- PROPOSITION -------------------%
+%---------------------------------------------------%
+
+% Menu proposition
+entrer_sudoku :- nl,write('  %=== ENTREZ LE SUDOKU ===%'),nl,nl,
+	proposition_sudoku(Grille),
+	afficher_grille(Grille), nl,
+	write('1. Entrer un chiffre'), nl,
+	write('2. Supprimer un chiffre'), nl,
+	write('3. Enregistrer le sudoku'), nl,
+	write('4. Quitter'), nl, nl,
+	read(Choix), nl,
+	cas_proposition(Choix,Grille),
+	sudoku_entre(Choix).
+
+% Entrer un chiffre
+cas_proposition(1,Grille) :- write('Ligne de la valeur a entrer : '),
+	read(IdLigne),
+	coordonnee_valide(IdLigne),nl,
+	write('Colonne de la valeur a entrer : '),
+	read(IdColonne),
+	coordonnee_valide(IdColonne),nl,
+	write('Valeur a entrer : '),
+	read(Valeur),
+	coordonnee_valide(Valeur),nl,
+	remplacer_valeur(Grille,IdColonne,IdLigne,Valeur,G),
+	sudoku_valide(G),
+	retract(proposition_sudoku(Grille)),
+	asserta(proposition_sudoku(G)),
+	write('Valeur ajoutee'),nl,nl,!.
+
+cas_proposition(1,_) :- !.
+
+% Supprimer un chiffre
+cas_proposition(2,Grille) :- write('Ligne de la valeur a supprimer : '),
+	read(IdLigne),
+	coordonnee_valide(IdLigne),nl,
+	write('Colonne de la valeur a supprimer : '),
+	read(IdColonne),
+	coordonnee_valide(IdColonne),nl,
+	supprimer_valeur(Grille,IdColonne,IdLigne,G),
+	retract(proposition_sudoku(Grille)),
+	asserta(proposition_sudoku(G)),
+	write('Valeur supprimee'),nl,nl,!.
+
+cas_proposition(2,_) :- !.
+
+% Valider un sudoku
+cas_proposition(3,Grille) :- write('Sudoku valide'),nl,nl, afficher_grille(Grille),nl,nl.
+
+cas_proposition(3,_) :- !.
+
+% Quitter
+cas_proposition(4,_) :- !.
+
+cas_proposition(_,_) :- nl, write('/!\ Entrez 1,2,3 ou 4'), nl, !, fail.
