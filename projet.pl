@@ -176,6 +176,7 @@ sudoku_entre(Choix) :- Choix = 4.
 %==================================================%
 %============= RESOLUTION AUTOMATIQUE =============%
 %==================================================%
+%%%%%%%%% TENTATIVE %%%%%%%%%%%
 
 % Tester si une case peut prendre une valeur
 valeur_possible(Grille,I,J,Valeur) :- retourner_ligne(Grille,I,Ligne),\+ element_present(Ligne,Valeur),
@@ -183,17 +184,15 @@ valeur_possible(Grille,I,J,Valeur) :- retourner_ligne(Grille,I,Ligne),\+ element
 									IdCar is 3*((I-1)//3)+((J-1)//3)+1, retourner_carre(Grille,IdCar,Carre),aplatir_liste(Carre,Carre_plat),\+ element_present(Carre_plat,Valeur).
 
 % Lister les valeurs possibles pour une case
-% valeurs_possibles(Grille,N,R) :- rechercher_ligne_colone(N,L,C), case_ij(Grille,L,C,0),!,valeurs_possibles(Grille,L,C,R,9).
-% valeurs_possibles(_,_,[]).
 valeurs_possibles(_,_,_,[],0) :- !.
 valeurs_possibles(Grille,I,J,[Valeur|Reste],Valeur) :- valeur_possible(Grille,I,J,Valeur), !, V is Valeur-1, valeurs_possibles(Grille,I,J,Solution,V).
 valeurs_possibles(Grille,I,J,Solution,Valeur) :- V is Valeur­-1, valeurs_possibles(Grille,I,J,Solution,V).
 
 % Lister les valeurs possibles pour toutes les cases
 toutes_valeurs(Grille,Solution) :- toutes_valeurs(Grille,Solution,1,1).
-toutes_valeurs(Grille,[Solution],9,9) :- ­!,valeurs_possibles(Grille,9,9,Solution,9)/*, \+ zero_vide(Grille,81,Solution)*/.
-toutes_valeurs(Grille,[Solution],IdLigne,9) :- ­!,valeurs_possibles(Grille,IdLigne,9,Solution,9)/*, \+ zero_vide(Grille,81,Solution)*/, I is IdLigne+1, toutes_valeurs(Grille,Solution,I,1).
-toutes_valeurs(Grille,[Resultat|Solution],IdLigne,IdColonne) :- valeurs_possibles(Grille,IdLigne,IdColonne,Solution,9)/*,\+ zero_vide(Grille,N,Resultat)*/, I is IdColonne+1, toutes_valeurs(Grille,Solution,IdLigne,I).
+toutes_valeurs(Grille,[Solution],9,9) :- ­!,valeurs_possibles(Grille,9,9,Solution,9).
+toutes_valeurs(Grille,[Solution],IdLigne,9) :- ­!,valeurs_possibles(Grille,IdLigne,9,Solution,9), I is IdLigne+1, toutes_valeurs(Grille,Solution,I,1).
+toutes_valeurs(Grille,[Resultat|Solution],IdLigne,IdColonne) :- valeurs_possibles(Grille,IdLigne,IdColonne,Solution,9), I is IdColonne+1, toutes_valeurs(Grille,Solution,IdLigne,I).
 
 % Appliquer les solutions pour les cases où il n'y a qu'une seule valeur possible
 valeur_unique([[]],[],[[]]) :- !.
@@ -204,61 +203,15 @@ valeur_unique([[Tete|Queue1]|Reste1],[_|Reste],[[Tete|Queue2]|Reste2]) :- !,vale
 % Tester si une valeur est unique dans une liste, et renvoyer sa position
 unique(X,[X|T],1) :- !, \+ element_present(X,T).
 unique(X,[_|T],Indice) :- I is Indice+1,unique(X,T,I).
-% has_unique_in_ligne(P,L,C,V) :- has_unique_in_ligne(P,L,C,V,1).
-% has_unique_in_ligne([C1,C2,C3,C4,C5,C6,C7,C8,C9|_],L,C,V,L) :- has_this_ligne_unique([C1,C2,C3,C4,C5,C6,C7,C8,C9],C,V), !.
-% has_unique_in_ligne([_,_,_,_,_,_,_,_,_|P],L,C,V,I) :- I<9, I2 is I+1, has_unique_in_ligne(P,L,C,V,I2).
-% has_this_ligne_unique(P,C,V) :- has_this_ligne_unique(P,C,V,1).
-% has_this_ligne_unique(P,C,V,V) :- element_liste_unique(P,V,C), !.
-% has_this_ligne_unique(P,C,V,I) :- I2 is I+1, has_this_ligne_unique(P,C,V,I2).
 
-% Résolution automatique
+%%%%% Résolution automatique
 solve(Grille) :- sudoku_valide(Grille),afficher_grille(Grille),nl,toutes_valeurs(Grille,Solution), solve(Grille,Solution).
-solve(Grille,Solution) :- \+ element_present(Solution,[_|_]), grille_pleine(Grille), is_valide(Grille), !, nl, affiche_grille(Grille).
-solve(Grille,Solution) :- element_present(Solution,[_]), !, valeur_unique(Grille,Solution,S), is_valide(S), toutes_valeurs(S,P2), solve(S,P2).
-solve(Grille,Solution) :- has_unique_in_ligne(Solution,L,C,V), !, modifier_case(Grille,L,C,V,G2), maj(Solution,L,C,V,P2), solve(G2,P2).
-solve(Grille,Solution) :- element_present(Solution,[X,_], I), rechercher_ligne_colone(I,L,C), modifier_case(Grille,L,C,X,G2), maj(Solution,L,C,X,P2), solve(G2,P2).
-solve(Grille,Solution) :- element_present(Solution,[_,X], I), !, rechercher_ligne_colone(I,L,C), modifier_case(Grille,L,C,X,G2), maj(Solution,L,C,X,P2), solve(G2,P2).
-solve(Grille,Solution) :- element_present(Solution,[X|_], I), rechercher_ligne_colone(I,L,C), modifier_case(Grille,L,C,X,G2), maj(Solution,L,C,X,P2), solve(G2,P2).
-solve(Grille,Solution) :- element_present(Solution,[_|R], I), modifier_element(Solution,I,R,P2), solve(Grille,P2).
-
-	% *Retourne la ligne et la colonne en fonction de l'indice d'une liste de 81 éléments
-	% rechercher_ligne_colone(I,1,I):­ I<10,!.
-	% rechercher_ligne_colone(I,2,Col):­ I>9, I<19, !, Col is (I­9).
-	% rechercher_ligne_colone(I,3,Col):­ I>18, I<28, !, Col is (I­9*2).
-	% rechercher_ligne_colone(I,4,Col):­ I>27, I<37, !, Col is (I­9*3).
-	% rechercher_ligne_colone(I,5,Col):­ I>36, I<46, !, Col is (I­9*4).
-	% rechercher_ligne_colone(I,6,Col):­ I>45, I<55, !, Col is (I­9*5).
-	% rechercher_ligne_colone(I,7,Col):­ I>54, I<64, !, Col is (I­9*6).
-	% rechercher_ligne_colone(I,8,Col):­ I>63, I<73, !, Col is (I­9*7).
-	% rechercher_ligne_colone(I,9,Col):­ I>72, I<82, Col is (I­9*8).
-
-	% *Vérifier si la Nième case du Sudoku n'a pas été choisie et que sa liste de possibilités (en 3ième argument) est vide
-	% zero_vide(G,N,[]) :­ rechercher_ligne_colone(N,L,C), case_ij(G,L,C,0), !.
-
-	% *Retirer la première occurrence de l'élément X dans une liste
-	% retirer(T,X,T) :­ \+ element_present(T,X), !.
-	% retirer([X|Q],X,Q) :­ !.
-	% retirer([T|Q],X,[T|Q2]) :­ retirer(Q,X,Q2).
-
-	% *Mettre à jour la liste des possibilités du Sudoku sachant que l'on a inséré la valeur X à la ligne L et la colonne C
-	% maj(P,L,C,X,P2) :­ maj(P,L,C,X,P2,1).
-	% maj([],_,_,_,[],_).
-	% maj([_|P],L,C,X,[[]|P2],I) :­ rechercher_ligne_colone(I,L,C), !, I2 is I+1, maj(P, L, C, X, P2, I2).
-	% maj([T|P],L,C,X,[T2|P2],I) :­ rechercher_ligne_colone(I,L,_),!,retirer(T,X,T2), I2 is I+1,maj(P, L, C, X, P2,I2).
-	% maj([T|P],L,C,X,[T2|P2],I) :­ rechercher_ligne_colone(I,_,C),!, retirer(T,X,T2), I2 is I+1,maj(P, L, C, X,P2,I2).
-	% maj([T|P],L,C,X,[T2|P2],I) :­ rechercher_ligne_colone(I,L1,C1), IdCar1 is 3*((L-1)//3)+((C-1)//3)+1, IdCar2 is 3*((L1-1)//3)+((C1-1)//3)+1, IdCar1=IdCar2, !, retirer(T,X,T2), I2 is I+1, maj(P, L, C, X, P2,I2).
-	% maj([T|P],L,C,X,[T|P2],I) :­ I2 is I+1, maj(P, L, C, X, P2, I2).
-
-	% *Résoudre un Sudoku déclaré avec le prédicat Sudoku au début du fichier
-	% solve_sudoku(I) :­ sudoku(I,G), solve(G).
-
-	% *Retourne la valeur V et l’indice I d’un élément de la liste si il est unique
-	% element_liste_unique([L|P],V,1) :­ element_present(L,V), \+ element_liste(P,V), !.
-	% element_liste_unique([L|P],V,I) :­ \+ element_present(L,V), element_liste_unique(P,V,I2), I is I2+1.
-
-	% *Prédicat qui s’efface si X est présent dans la liste
-	% element_liste([L|_],X) :­ element_present(L,X), !.
-	% element_liste([_|Q],X) :­ element_liste(Q,X).
+% Condition d'arrêt
+solve(Grille,Solution) :- \+ element_present(Solution,[_|_]), grille_pleine(Grille), sudoku_valide(Grille), !, nl, afficher_grille(Grille).
+% Application des solutions uniques pour chaque case où il n'y a qu'une seule valeur possible
+solve(Grille,Solution) :- element_present(Solution,[_]), !, valeur_unique(Grille,Solution,Sudoku), sudoku_valide(Sudoku), toutes_valeurs(Sudoku,Resultat), solve(Sudoku,Resultat).
+% Application unique
+%solve(Grille,Solution) :- unique(
 
 
 
@@ -274,7 +227,7 @@ sudoku :- nl,
 			menu, !.
 
 menu :- write(' %=========== MENU ===========%'),nl,nl,
-		write('1. Resoudre manuellement un sudoku de l\'ordinateur'),nl,
+		write('1. Resoudre un sudoku de l\'ordinateur'),nl,
 		write('2. Entrer un sudoku manuellement'),nl,
 		write('3. Quitter'),nl,nl,
 			read(Choix), nl,
@@ -307,7 +260,8 @@ resolution_manuelle :- nl,write('  %===== COMPLETEZ =====%'),nl,nl,
 	afficher_grille(Grille), nl,
 	write('1. Entrer un chiffre'), nl,
 	write('2. Supprimer un chiffre'), nl,
-	write('3. Quitter'), nl, nl,
+	write('3. Resoudre automatiquement'), nl,
+	write('4. Quitter'), nl, nl,
 	read(Choix), nl,
 	cas_resolution(Choix,Grille),
 	grille(Grille_modifiee),
@@ -347,10 +301,15 @@ cas_resolution(2,Grille) :- write('Ligne de la valeur a supprimer : '),
 
 cas_resolution(2,_) :- !.
 
-% Quitter
-cas_resolution(3,_) :- !.
+% Résolution automatique
+cas_resolution(3,Grille) :- write('Tentative infructueuse de resoudre automatiquement un sudoku'),!.
 
-cas_resolution(_,_) :- nl, write('/!\ Entrez 1,2 ou 3'), nl, !, fail.
+cas_resolution(2,_) :- !.
+
+% Quitter
+cas_resolution(4,_) :- !.
+
+cas_resolution(_,_) :- nl, write('/!\ Entrez 1,2,3 ou 4'), nl, !, fail.
 
 
 %---------------------------------------------------%
