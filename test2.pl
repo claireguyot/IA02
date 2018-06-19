@@ -1,6 +1,11 @@
-%Predicats principaux :
-%generer_random(Nombre, G). -> Genere une grille avec un certain nombre d'element entré en parametre. Renvoi la grille dans G. La grille est valide et possède au moins une solution.
-%resoud_sudoku(G, Sol). -> Resoud la grille G et la place dans Sol. Appuyer sur ; permet d'avoir toutes les solutions. Echoue si la grille n'est pas valide ou ne possède plus de solutions.
+%==================================================%
+%============== PREDICATS PRINCIPAUX ==============%
+%==================================================%
+
+% generer_random(Nombre, G).   -> Genere une grille avec un certain nombre d'element entré en parametre. Renvoi la grille dans G. La grille est valide et possède au moins une solution.
+
+% resoud_sudoku(G, Sol).   -> Resoud la grille G et la place dans Sol. Appuyer sur ; permet d'avoir toutes les solutions. Echoue si la grille n'est pas valide ou ne possède plus de solutions.
+
 %sudoku. -> Lance le menu.
 
 
@@ -227,7 +232,7 @@ sudoku :- nl,
 
 menu :- write(' %=========== MENU ===========%'),nl,nl,
 		write('1. Resoudre un sudoku de l\'ordinateur'),nl,
-		write('2. Entrer un sudoku dans l\'ordinateur'),nl,
+		write('2. Entrer un sudoku'),nl,
 		write('3. Quitter'),nl,nl,
 			read(Choix), nl,
 			cas(Choix),
@@ -235,7 +240,7 @@ menu :- write(' %=========== MENU ===========%'),nl,nl,
 
 cas(1) :- write(' %===== RESOLUTION =====%'),nl,
 			sudoku(4,Grille),
-			asserta(grille(Grille)),
+			asserta(resolution_sudoku(Grille)),
 			repeat,
 			resolution_manuelle, !.
 
@@ -255,15 +260,15 @@ cas(_) :- write('/!\ Entrez 1,2 ou 3'),!.
 
 % Menu résolution
 resolution_manuelle :- nl,write('  %===== COMPLETEZ =====%'),nl,nl,
-	grille(Grille), 
+	resolution_sudoku(Grille), 
 	afficher_grille(Grille), nl,
 	write('1. Entrer un chiffre'), nl,
 	write('2. Supprimer un chiffre'), nl,
-	write('3. Resoudre automatiquement'), nl,
-	write('4. Quitter'), nl, nl,
+	write('3. Quitter'), nl,
+	write('4. Resoudre automatiquement'), nl, nl,
 	read(Choix), nl,
 	cas_resolution(Choix,Grille),
-	grille(Grille_modifiee),
+	resolution_sudoku(Grille_modifiee),
 	resolution_valide(Grille_modifiee,Choix).
 
 % Entrer un chiffre
@@ -279,9 +284,10 @@ cas_resolution(1,Grille) :- write('Ligne de la valeur a entrer : '),
 	case_vide(Grille,IdLigne,IdColonne),
 	remplace_Grille(Grille,IdColonne,IdLigne,Valeur,G),
 	sudoku_valide(G),
-	retract(grille(Grille)),
-	asserta(grille(G)),
-	write('Valeur ajoutee'),nl,nl,!.
+	afficher_grille(G), nl,
+	retract(resolution_sudoku(Grille)),
+	asserta(resolution_sudoku(G)),
+	write('Valeur ajoutee, /!\ apres une suppression, il faut ajouter deux fois une valeur au meme emplacement'),nl,nl,!.
 
 cas_resolution(1,_) :- !.
 
@@ -292,23 +298,24 @@ cas_resolution(2,Grille) :- write('Ligne de la valeur a supprimer : '),
 	write('Colonne de la valeur a supprimer : '),
 	read(IdColonne),
 	coordonnee_valide(IdColonne),nl,
-	case_pleine(Grille,IdLigne,IdColonne),
+    case_pleine(Grille,IdLigne,IdColonne),
 	supprimer_valeur(Grille,IdColonne,IdLigne,G),
-	retract(grille(Grille)),
-	asserta(grille(G)),
+    afficher_grille(G),nl,
+	retract(resolution_sudoku(Grille)),
+	asserta(resolution_sudoku(G)),
 	write('Valeur supprimee'),nl,nl,!.
 
 cas_resolution(2,_) :- !.
 
-% Résolution automatique
-cas_resolution(3,Grille) :- resoudre_sudoku(Grille),nl,nl,!.
-
-cas_resolution(2,_) :- !.
-
 % Quitter
+cas_resolution(3,_) :- !.
+
+% Résolution automatique
+cas_resolution(4,Grille) :- resoud_sudoku(Grille,Sol),afficher_grille(Sol),nl,nl,menu,!.
+
 cas_resolution(4,_) :- !.
 
-cas_resolution(_,_) :- nl, write('/!\ Entrez 1,2,3 ou 4'), nl, !, fail.
+cas_resolution(_,_) :- nl, write('/!\ Entrez 1,2 ou 3'), nl, !, fail.
 
 
 %---------------------------------------------------%
@@ -321,8 +328,8 @@ entrer_sudoku :- nl,write('  %=== ENTREZ LE SUDOKU ===%'),nl,nl,
 	afficher_grille(Grille), nl,
 	write('1. Entrer un chiffre'), nl,
 	write('2. Supprimer un chiffre'), nl,
-	write('3. Generer un sudoku automatiquement'), nl,
-	write('4. Quitter'), nl, nl,
+	write('3. Quitter'), nl,
+	write('4. Generer un sudoku automatiquement'), nl, nl,
 	read(Choix), nl,
 	cas_proposition(Choix,Grille),
 	sudoku_entre(Choix).
@@ -339,9 +346,10 @@ cas_proposition(1,Grille) :- write('Ligne de la valeur a entrer : '),
 	coordonnee_valide(Valeur),nl,
 	remplace_Grille(Grille,IdColonne,IdLigne,Valeur,G),
 	sudoku_valide(G),
-	retract(proposition_sudoku(Grille)),
+	afficher_grille(G), nl,
 	asserta(proposition_sudoku(G)),
-	write('Valeur ajoutee'),nl,nl,!.
+	retract(proposition_sudoku(Grille)),
+	write('Valeur ajoutee, /!\ apres une suppression, il faut ajouter deux fois une valeur au meme emplacement'),nl,nl,!.
 
 cas_proposition(1,_) :- !.
 
@@ -359,14 +367,25 @@ cas_proposition(2,Grille) :- write('Ligne de la valeur a supprimer : '),
 
 cas_proposition(2,_) :- !.
 
-% Générer un sudoku
-cas_proposition(3,Grille) :- write('Nombre de chiffres voulus : '),
-	read(Nb),nl,
-	generer_random(Nb, Grille_random),nl,nl,!.
-
+% Quitter
 cas_proposition(3,_) :- !.
 
-% Quitter
+% Générer un sudoku aléatoire
+cas_proposition(4,Grille) :- write('Nombre de chiffres voulus : '),
+	read(Nb),nl,
+    generer_random(Nb, Grille_random),nl,nl,
+    write('1. Resoudre cette grille automatiquement'),nl,
+    write('2. Retourner au menu'),nl,nl,
+	read(ChoixRes), nl,
+	cas_generation(ChoixRes,Grille_random),!.
+
+cas_generation(1,Grille_random) :- resoud_sudoku(Grille_random,Sol),afficher_grille(Sol),nl,nl,!.
+cas_generation(1,_) :- !.
+cas_generation(2,Grille_random) :- nl,!.
+cas_generation(2,_) :- !.
+cas_generation(_,_) :- nl, write('/!\ Entrez 1 ou 2'), nl, !, fail.
+
 cas_proposition(4,_) :- !.
+
 
 cas_proposition(_,_) :- nl, write('/!\ Entrez 1,2,3 ou 4'), nl, !, fail.
