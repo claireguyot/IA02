@@ -224,48 +224,6 @@ sudoku_entre(Choix) :- Choix = 4.
 
 
 %==================================================%
-%============= RESOLUTION AUTOMATIQUE =============%
-%==================================================%
-%%%%%%%%% TENTATIVE %%%%%%%%%%%
-
-% Tester si une case peut prendre une valeur
-valeur_possible(Grille,I,J,Valeur) :- retourner_ligne(Grille,I,Ligne),\+ element_present(Ligne,Valeur),
-									retourner_colonne(Grille,J,Colonne),\+ element_present(Colonne,Valeur), 
-									IdCar is 3*((I-1)//3)+((J-1)//3)+1, retourner_carre(Grille,IdCar,Carre),aplatir_liste(Carre,Carre_plat),\+ element_present(Carre_plat,Valeur).
-
-% Lister les valeurs possibles pour une case
-valeurs_possibles(_,_,_,[],0) :- !.
-valeurs_possibles(Grille,I,J,[Valeur|Reste],Valeur) :- valeur_possible(Grille,I,J,Valeur), !, V is Valeur-1, valeurs_possibles(Grille,I,J,Solution,V).
-valeurs_possibles(Grille,I,J,Solution,Valeur) :- V is Valeur­-1, valeurs_possibles(Grille,I,J,Solution,V).
-
-% Lister les valeurs possibles pour toutes les cases
-toutes_valeurs(Grille,Solution) :- toutes_valeurs(Grille,Solution,1,1).
-toutes_valeurs(Grille,[Solution],9,9) :- ­!,valeurs_possibles(Grille,9,9,Solution,9).
-toutes_valeurs(Grille,[Solution],IdLigne,9) :- ­!,valeurs_possibles(Grille,IdLigne,9,Solution,9), I is IdLigne+1, toutes_valeurs(Grille,Solution,I,1).
-toutes_valeurs(Grille,[Resultat|Solution],IdLigne,IdColonne) :- valeurs_possibles(Grille,IdLigne,IdColonne,Solution,9), I is IdColonne+1, toutes_valeurs(Grille,Solution,IdLigne,I).
-
-% Appliquer les solutions pour les cases où il n'y a qu'une seule valeur possible
-valeur_unique([[]],[],[[]]) :- !.
-valeur_unique([[]|Reste1],Reste,[[]|Reste2]) :- !,valeur_unique(Reste1,Reste,Reste2).
-valeur_unique([[0|Queue1]|Reste1],[[X]|Reste],[[X|Queue2]|Reste2]) :- !,valeur_unique([Queue1|Reste1],Reste,[Queue2|Reste2]).
-valeur_unique([[Tete|Queue1]|Reste1],[_|Reste],[[Tete|Queue2]|Reste2]) :- !,valeur_unique([Queue1|Reste1],Reste,[Queue2|Reste2]).
-
-% Tester si une valeur est unique dans une liste, et renvoyer sa position
-unique(X,[X|T],1) :- !, \+ element_present(X,T).
-unique(X,[_|T],Indice) :- I is Indice+1,unique(X,T,I).
-
-%%%%% Résolution automatique
-solve(Grille) :- sudoku_valide(Grille),afficher_grille(Grille),nl,toutes_valeurs(Grille,Solution), solve(Grille,Solution).
-% Condition d'arrêt
-solve(Grille,Solution) :- \+ element_present(Solution,[_|_]), grille_pleine(Grille), sudoku_valide(Grille), !, nl, afficher_grille(Grille).
-% Application des solutions uniques pour chaque case où il n'y a qu'une seule valeur possible
-solve(Grille,Solution) :- element_present(Solution,[_]), !, valeur_unique(Grille,Solution,Sudoku), sudoku_valide(Sudoku), toutes_valeurs(Sudoku,Resultat), solve(Sudoku,Resultat).
-% Application unique
-%solve(Grille,Solution) :- unique(
-
-
-
-%==================================================%
 %================= MENU PRINCIPAL =================%
 %==================================================%
 
